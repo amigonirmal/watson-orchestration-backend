@@ -1,0 +1,1001 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Watson Orchestration Backend API",
+    "version": "1.0.0",
+    "description": "REST API for accessing YFS Statistics Detail data from PostgreSQL database for WatsonX Orchestrate integration",
+    "contact": {
+      "name": "API Support",
+      "email": "support@example.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.production.com",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Health check endpoints"
+    },
+    {
+      "name": "Query",
+      "description": "Data query endpoints"
+    },
+    {
+      "name": "Webhook",
+      "description": "Watson Assistant webhook endpoints"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "API Information",
+        "description": "Get basic API information and available endpoints",
+        "tags": ["Health"],
+        "responses": {
+          "200": {
+            "description": "API information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "Watson Orchestration Backend API"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "1.0.0"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "running"
+                    },
+                    "endpoints": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Check API and database health status",
+        "tags": ["Health"],
+        "responses": {
+          "200": {
+            "description": "Health status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/query/stats": {
+      "get": {
+        "summary": "Get General Statistics",
+        "description": "Retrieve general statistics for a specified date range",
+        "tags": ["Query"],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "date_start",
+            "in": "query",
+            "description": "Start date (YYYY-MM-DD) or relative date (e.g., 'last_7_days', 'yesterday')",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "last_7_days"
+            }
+          },
+          {
+            "name": "date_end",
+            "in": "query",
+            "description": "End date (YYYY-MM-DD) or relative date (e.g., 'today')",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "today"
+            }
+          },
+          {
+            "name": "service_name",
+            "in": "query",
+            "description": "Filter by service name (partial match, case-insensitive)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "service_type",
+            "in": "query",
+            "description": "Filter by service type (exact match)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["API", "INTEGRATION", "AGENT", "SERVICE"]
+            }
+          },
+          {
+            "name": "statistic_name",
+            "in": "query",
+            "description": "Filter by statistic name (partial match, case-insensitive)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/query/components/list": {
+      "get": {
+        "summary": "List Components",
+        "description": "Get a list of available components/servers",
+        "tags": ["Query"],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search term to filter components",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of results to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 300,
+              "maximum": 300
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Components list retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComponentsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/api/query/component/performance": {
+      "get": {
+        "summary": "Get Component Performance",
+        "description": "Retrieve performance metrics for specific component(s)",
+        "tags": ["Query"],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "component",
+            "in": "query",
+            "description": "Component/server name to filter by",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_start",
+            "in": "query",
+            "description": "Start date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "last_7_days"
+            }
+          },
+          {
+            "name": "date_end",
+            "in": "query",
+            "description": "End date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "today"
+            }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "description": "Specific metric to retrieve",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["all", "response_time", "avg_response_time", "max_response_time", "min_response_time", "success_rate", "error_rate"],
+              "default": "all"
+            }
+          },
+          {
+            "name": "service_name",
+            "in": "query",
+            "description": "Filter by service name (partial match, case-insensitive)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "service_type",
+            "in": "query",
+            "description": "Filter by service type (exact match)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["API", "INTEGRATION", "AGENT", "SERVICE"]
+            }
+          },
+          {
+            "name": "statistic_name",
+            "in": "query",
+            "description": "Filter by statistic name (partial match, case-insensitive)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Performance metrics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerformanceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/api/query/timeseries": {
+      "get": {
+        "summary": "Get Time Series Data",
+        "description": "Retrieve time series data for visualization",
+        "tags": ["Query"],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "component",
+            "in": "query",
+            "description": "Component name to filter by",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "last_7_days"
+            }
+          },
+          {
+            "name": "date_end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "today"
+            }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "response_time"
+            }
+          },
+          {
+            "name": "aggregation",
+            "in": "query",
+            "description": "Time aggregation level",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["hourly", "daily"],
+              "default": "hourly"
+            }
+          },
+          {
+            "name": "service_name",
+            "in": "query",
+            "description": "Filter by service name (partial match, case-insensitive)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "service_type",
+            "in": "query",
+            "description": "Filter by service type (exact match)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["API", "INTEGRATION", "AGENT", "SERVICE"]
+            }
+          },
+          {
+            "name": "statistic_name",
+            "in": "query",
+            "description": "Filter by statistic name (partial match, case-insensitive)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Time series data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeSeriesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/api/query/orders/stats": {
+      "get": {
+        "summary": "Get Order Statistics",
+        "description": "Retrieve order statistics with aggregation",
+        "tags": ["Query"],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "date_start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "yesterday"
+            }
+          },
+          {
+            "name": "date_end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "today"
+            }
+          },
+          {
+            "name": "statistic_type",
+            "in": "query",
+            "description": "Type of statistic to retrieve",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["maximum", "minimum"],
+              "default": "maximum"
+            }
+          },
+          {
+            "name": "aggregation",
+            "in": "query",
+            "description": "Aggregation level",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["hourly", "daily", "weekly", "monthly"],
+              "default": "daily"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderStatsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/api/query/components/compare": {
+      "post": {
+        "summary": "Compare Components",
+        "description": "Compare performance metrics across multiple components",
+        "tags": ["Query"],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["components"],
+                "properties": {
+                  "components": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": ["IKEAScheduleOrderIntegServer", "IkeaReleaseOrderAgent"]
+                  },
+                  "date_start": {
+                    "type": "string",
+                    "default": "last_7_days"
+                  },
+                  "date_end": {
+                    "type": "string",
+                    "default": "today"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Comparison data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparisonResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - components array required"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/api/webhook/watson": {
+      "post": {
+        "summary": "Watson Assistant Webhook",
+        "description": "Handle Watson Assistant webhook requests",
+        "tags": ["Webhook"],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatsonWebhookRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatsonWebhookResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key for authentication"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "healthy"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uptime": {
+            "type": "number",
+            "example": 285.84
+          },
+          "environment": {
+            "type": "string",
+            "example": "development"
+          },
+          "version": {
+            "type": "string",
+            "example": "1.0.0"
+          },
+          "database": {
+            "type": "object",
+            "properties": {
+              "connected": {
+                "type": "boolean"
+              },
+              "pool": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "integer"
+                  },
+                  "idle": {
+                    "type": "integer"
+                  },
+                  "waiting": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "StatsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "total_records": {
+                "type": "string"
+              },
+              "unique_servers": {
+                "type": "string"
+              },
+              "unique_services": {
+                "type": "string"
+              },
+              "unique_statistics": {
+                "type": "string"
+              },
+              "total_value": {
+                "type": "string"
+              },
+              "avg_value": {
+                "type": "string"
+              },
+              "max_value": {
+                "type": "string"
+              },
+              "min_value": {
+                "type": "string"
+              },
+              "earliest_record": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "latest_record": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "dateStart": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "dateEnd": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "ComponentsListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "server_name": {
+                  "type": "string"
+                },
+                "service_name": {
+                  "type": "string"
+                },
+                "service_type": {
+                  "type": "string"
+                },
+                "record_count": {
+                  "type": "string"
+                },
+                "last_record_time": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "statistic_types": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "searchTerm": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "PerformanceResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "server_name": {
+                  "type": "string"
+                },
+                "service_name": {
+                  "type": "string"
+                },
+                "service_type": {
+                  "type": "string"
+                },
+                "statistic_name": {
+                  "type": "string"
+                },
+                "total_records": {
+                  "type": "string"
+                },
+                "total_value": {
+                  "type": "string"
+                },
+                "avg_value": {
+                  "type": "string"
+                },
+                "max_value": {
+                  "type": "string"
+                },
+                "min_value": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "metadata": {
+            "type": "object"
+          }
+        }
+      },
+      "TimeSeriesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "time_period": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "server_name": {
+                  "type": "string"
+                },
+                "statistic_name": {
+                  "type": "string"
+                },
+                "total_value": {
+                  "type": "string"
+                },
+                "avg_value": {
+                  "type": "string"
+                },
+                "max_value": {
+                  "type": "string"
+                },
+                "min_value": {
+                  "type": "string"
+                },
+                "record_count": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "metadata": {
+            "type": "object"
+          }
+        }
+      },
+      "OrderStatsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "time_period": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "total_value": {
+                "type": "string"
+              },
+              "record_count": {
+                "type": "string"
+              }
+            }
+          },
+          "metadata": {
+            "type": "object"
+          }
+        }
+      },
+      "ComparisonResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "components": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "dateStart": {
+                "type": "string"
+              },
+              "dateEnd": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "WatsonWebhookRequest": {
+        "type": "object",
+        "required": ["intent"],
+        "properties": {
+          "intent": {
+            "type": "string",
+            "enum": [
+              "query_order_statistics",
+              "query_component_performance",
+              "query_component_list",
+              "generate_visualization",
+              "query_date_range_stats"
+            ]
+          },
+          "entities": {
+            "type": "object",
+            "properties": {
+              "component": {
+                "type": "string"
+              },
+              "date_start": {
+                "type": "string"
+              },
+              "date_end": {
+                "type": "string"
+              },
+              "metric": {
+                "type": "string"
+              },
+              "aggregation": {
+                "type": "string"
+              }
+            }
+          },
+          "context": {
+            "type": "object"
+          }
+        }
+      },
+      "WatsonWebhookResponse": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object"
+              },
+              "image_url": {
+                "type": "string"
+              }
+            }
+          },
+          "context": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "API key is missing or invalid",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

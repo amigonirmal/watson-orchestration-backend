@@ -1,0 +1,253 @@
+{
+  "entities": [
+    {
+      "entity": "date",
+      "description": "Date and time expressions",
+      "values": [
+        {
+          "value": "today",
+          "synonyms": ["today", "current day", "this day"]
+        },
+        {
+          "value": "yesterday",
+          "synonyms": ["yesterday", "previous day", "last day"]
+        },
+        {
+          "value": "last_week",
+          "synonyms": ["last week", "previous week", "past week"]
+        },
+        {
+          "value": "last_month",
+          "synonyms": ["last month", "previous month", "past month"]
+        },
+        {
+          "value": "this_week",
+          "synonyms": ["this week", "current week"]
+        },
+        {
+          "value": "this_month",
+          "synonyms": ["this month", "current month"]
+        },
+        {
+          "value": "last_7_days",
+          "synonyms": ["last 7 days", "past 7 days", "last week", "past week"]
+        },
+        {
+          "value": "last_30_days",
+          "synonyms": ["last 30 days", "past 30 days", "last month"]
+        },
+        {
+          "value": "last_24_hours",
+          "synonyms": ["last 24 hours", "past 24 hours", "last day"]
+        },
+        {
+          "value": "last_hour",
+          "synonyms": ["last hour", "past hour", "previous hour"]
+        }
+      ],
+      "patterns": [
+        "\\d{4}-\\d{2}-\\d{2}",
+        "\\d{1,2}/\\d{1,2}/\\d{4}",
+        "(January|February|March|April|May|June|July|August|September|October|November|December)\\s+\\d{1,2}",
+        "(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+\\d{1,2}"
+      ]
+    },
+    {
+      "entity": "metric",
+      "description": "Performance metrics to query",
+      "values": [
+        {
+          "value": "response_time",
+          "synonyms": ["response time", "latency", "speed", "how fast", "performance time"]
+        },
+        {
+          "value": "success_rate",
+          "synonyms": ["success rate", "success percentage", "pass rate", "reliability"]
+        },
+        {
+          "value": "error_rate",
+          "synonyms": ["error rate", "failure rate", "error percentage", "fail rate"]
+        },
+        {
+          "value": "request_count",
+          "synonyms": ["request count", "number of requests", "total requests", "request volume"]
+        },
+        {
+          "value": "avg_response_time",
+          "synonyms": ["average response time", "mean response time", "avg latency"]
+        },
+        {
+          "value": "max_response_time",
+          "synonyms": ["maximum response time", "max latency", "slowest response", "peak response time"]
+        },
+        {
+          "value": "min_response_time",
+          "synonyms": ["minimum response time", "min latency", "fastest response"]
+        },
+        {
+          "value": "p95_response_time",
+          "synonyms": ["95th percentile", "p95", "95 percentile response time"]
+        },
+        {
+          "value": "p99_response_time",
+          "synonyms": ["99th percentile", "p99", "99 percentile response time"]
+        },
+        {
+          "value": "throughput",
+          "synonyms": ["throughput", "requests per second", "rps", "request rate"]
+        }
+      ]
+    },
+    {
+      "entity": "aggregation",
+      "description": "Time aggregation granularity",
+      "values": [
+        {
+          "value": "hourly",
+          "synonyms": ["hourly", "per hour", "by hour", "hour by hour", "each hour"]
+        },
+        {
+          "value": "daily",
+          "synonyms": ["daily", "per day", "by day", "day by day", "each day"]
+        },
+        {
+          "value": "weekly",
+          "synonyms": ["weekly", "per week", "by week", "week by week", "each week"]
+        },
+        {
+          "value": "monthly",
+          "synonyms": ["monthly", "per month", "by month", "month by month", "each month"]
+        },
+        {
+          "value": "minute",
+          "synonyms": ["per minute", "by minute", "minute by minute", "each minute"]
+        }
+      ]
+    },
+    {
+      "entity": "statistic_type",
+      "description": "Type of statistical aggregation",
+      "values": [
+        {
+          "value": "maximum",
+          "synonyms": ["maximum", "max", "highest", "peak", "top", "most"]
+        },
+        {
+          "value": "minimum",
+          "synonyms": ["minimum", "min", "lowest", "bottom", "least"]
+        },
+        {
+          "value": "average",
+          "synonyms": ["average", "avg", "mean"]
+        },
+        {
+          "value": "total",
+          "synonyms": ["total", "sum", "overall", "cumulative"]
+        },
+        {
+          "value": "median",
+          "synonyms": ["median", "middle", "50th percentile"]
+        }
+      ]
+    },
+    {
+      "entity": "component",
+      "description": "System components (300+ components)",
+      "values": [
+        {
+          "value": "work_order",
+          "synonyms": ["work order", "workorder", "wo", "work orders"]
+        },
+        {
+          "value": "asset",
+          "synonyms": ["asset", "assets", "equipment"]
+        },
+        {
+          "value": "inventory",
+          "synonyms": ["inventory", "stock", "items"]
+        },
+        {
+          "value": "purchase_order",
+          "synonyms": ["purchase order", "po", "purchase orders"]
+        },
+        {
+          "value": "service_request",
+          "synonyms": ["service request", "sr", "service requests", "ticket"]
+        },
+        {
+          "value": "location",
+          "synonyms": ["location", "locations", "site"]
+        },
+        {
+          "value": "person",
+          "synonyms": ["person", "people", "user", "users"]
+        },
+        {
+          "value": "labor",
+          "synonyms": ["labor", "labour", "workforce"]
+        },
+        {
+          "value": "item",
+          "synonyms": ["item", "items", "parts"]
+        },
+        {
+          "value": "contract",
+          "synonyms": ["contract", "contracts"]
+        }
+      ],
+      "fuzzy_match": true
+    },
+    {
+      "entity": "chart_type",
+      "description": "Type of visualization chart",
+      "values": [
+        {
+          "value": "line",
+          "synonyms": ["line chart", "line graph", "time series", "trend line"]
+        },
+        {
+          "value": "bar",
+          "synonyms": ["bar chart", "bar graph", "column chart"]
+        },
+        {
+          "value": "pie",
+          "synonyms": ["pie chart", "pie graph", "donut chart"]
+        },
+        {
+          "value": "heatmap",
+          "synonyms": ["heatmap", "heat map", "density map"]
+        },
+        {
+          "value": "scatter",
+          "synonyms": ["scatter plot", "scatter chart", "scatter graph"]
+        },
+        {
+          "value": "area",
+          "synonyms": ["area chart", "area graph", "stacked area"]
+        }
+      ]
+    },
+    {
+      "entity": "comparison_operator",
+      "description": "Comparison operators for queries",
+      "values": [
+        {
+          "value": "greater_than",
+          "synonyms": ["greater than", "more than", "above", "over", ">"]
+        },
+        {
+          "value": "less_than",
+          "synonyms": ["less than", "fewer than", "below", "under", "<"]
+        },
+        {
+          "value": "equal_to",
+          "synonyms": ["equal to", "equals", "exactly", "="]
+        },
+        {
+          "value": "between",
+          "synonyms": ["between", "from", "in the range"]
+        }
+      ]
+    }
+  ]
+}

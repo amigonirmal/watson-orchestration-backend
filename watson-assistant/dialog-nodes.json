@@ -1,0 +1,413 @@
+{
+  "dialog_nodes": [
+    {
+      "type": "standard",
+      "title": "Welcome",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "Hello! I'm your Performance Analytics Assistant. I can help you query performance data from your PostgreSQL database. You can ask me about:\n\n📊 Order statistics (max/min orders in date ranges)\n⚡ Component performance metrics\n📈 Visualizations and graphs\n🔍 Available components\n\nWhat would you like to know?"
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "conditions": "welcome",
+      "dialog_node": "node_1_welcome"
+    },
+    {
+      "type": "standard",
+      "title": "Greeting",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "Hi there! How can I help you with performance analytics today?"
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "conditions": "#greeting",
+      "dialog_node": "node_2_greeting"
+    },
+    {
+      "type": "standard",
+      "title": "Help",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "I can help you with:\n\n1️⃣ **Order Statistics**\n   - \"What's the maximum number of orders created yesterday?\"\n   - \"Show me min orders for last week\"\n   - \"Give me hourly order counts for today\"\n\n2️⃣ **Component Performance**\n   - \"How is the work order component performing?\"\n   - \"Show me response time for asset component\"\n   - \"What's the error rate for inventory component?\"\n\n3️⃣ **Visualizations**\n   - \"Generate a graph of order trends\"\n   - \"Show me a chart of component performance\"\n   - \"Create a heatmap of hourly volumes\"\n\n4️⃣ **Component List**\n   - \"What components are available?\"\n   - \"List all components\"\n\nWhat would you like to explore?"
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "conditions": "#help",
+      "dialog_node": "node_3_help"
+    },
+    {
+      "type": "standard",
+      "title": "Query Order Statistics",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "Let me fetch the order statistics for you..."
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "conditions": "#query_order_statistics",
+      "dialog_node": "node_4_order_stats",
+      "actions": [
+        {
+          "name": "webhook_call",
+          "type": "webhook",
+          "parameters": {
+            "intent": "query_order_statistics",
+            "date_start": "<? @date ?>",
+            "date_end": "<? @date ?>",
+            "statistic_type": "<? @statistic_type ?>",
+            "aggregation": "<? @aggregation ?>"
+          },
+          "result_variable": "webhook_result_1"
+        }
+      ],
+      "next_step": {
+        "behavior": "jump_to",
+        "selector": "body",
+        "dialog_node": "node_4_order_stats_response"
+      }
+    },
+    {
+      "type": "standard",
+      "title": "Order Statistics Response",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "<? $webhook_result_1.response.text ?>"
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "parent": "node_4_order_stats",
+      "dialog_node": "node_4_order_stats_response",
+      "previous_sibling": "node_4_order_stats"
+    },
+    {
+      "type": "standard",
+      "title": "Query Component Performance",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "Analyzing component performance..."
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "conditions": "#query_component_performance",
+      "dialog_node": "node_5_component_perf",
+      "actions": [
+        {
+          "name": "webhook_call",
+          "type": "webhook",
+          "parameters": {
+            "intent": "query_component_performance",
+            "component": "<? @component ?>",
+            "date_start": "<? @date ?>",
+            "date_end": "<? @date ?>",
+            "metric": "<? @metric ?>"
+          },
+          "result_variable": "webhook_result_2"
+        }
+      ],
+      "next_step": {
+        "behavior": "jump_to",
+        "selector": "body",
+        "dialog_node": "node_5_component_perf_response"
+      }
+    },
+    {
+      "type": "standard",
+      "title": "Component Performance Response",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "<? $webhook_result_2.response.text ?>"
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          },
+          {
+            "source": "<? $webhook_result_2.response.image_url ?>",
+            "response_type": "image",
+            "conditions": "<? $webhook_result_2.response.image_url ?>"
+          }
+        ]
+      },
+      "parent": "node_5_component_perf",
+      "dialog_node": "node_5_component_perf_response",
+      "previous_sibling": "node_5_component_perf"
+    },
+    {
+      "type": "standard",
+      "title": "Query Component List",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "Fetching available components..."
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "conditions": "#query_component_list",
+      "dialog_node": "node_6_component_list",
+      "actions": [
+        {
+          "name": "webhook_call",
+          "type": "webhook",
+          "parameters": {
+            "intent": "query_component_list",
+            "search_term": "<? input.text ?>"
+          },
+          "result_variable": "webhook_result_3"
+        }
+      ],
+      "next_step": {
+        "behavior": "jump_to",
+        "selector": "body",
+        "dialog_node": "node_6_component_list_response"
+      }
+    },
+    {
+      "type": "standard",
+      "title": "Component List Response",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "<? $webhook_result_3.response.text ?>"
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "parent": "node_6_component_list",
+      "dialog_node": "node_6_component_list_response",
+      "previous_sibling": "node_6_component_list"
+    },
+    {
+      "type": "standard",
+      "title": "Generate Visualization",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "Creating visualization..."
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "conditions": "#generate_visualization",
+      "dialog_node": "node_7_visualization",
+      "actions": [
+        {
+          "name": "webhook_call",
+          "type": "webhook",
+          "parameters": {
+            "intent": "generate_visualization",
+            "chart_type": "<? @chart_type ?>",
+            "component": "<? @component ?>",
+            "date_start": "<? @date ?>",
+            "date_end": "<? @date ?>",
+            "metric": "<? @metric ?>"
+          },
+          "result_variable": "webhook_result_4"
+        }
+      ],
+      "next_step": {
+        "behavior": "jump_to",
+        "selector": "body",
+        "dialog_node": "node_7_visualization_response"
+      }
+    },
+    {
+      "type": "standard",
+      "title": "Visualization Response",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "<? $webhook_result_4.response.text ?>"
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          },
+          {
+            "source": "<? $webhook_result_4.response.image_url ?>",
+            "response_type": "image"
+          }
+        ]
+      },
+      "parent": "node_7_visualization",
+      "dialog_node": "node_7_visualization_response",
+      "previous_sibling": "node_7_visualization"
+    },
+    {
+      "type": "standard",
+      "title": "Query Date Range Stats",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "Gathering statistics for the specified date range..."
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "conditions": "#query_date_range_stats",
+      "dialog_node": "node_8_date_range_stats",
+      "actions": [
+        {
+          "name": "webhook_call",
+          "type": "webhook",
+          "parameters": {
+            "intent": "query_date_range_stats",
+            "date_start": "<? @date ?>",
+            "date_end": "<? @date ?>"
+          },
+          "result_variable": "webhook_result_5"
+        }
+      ],
+      "next_step": {
+        "behavior": "jump_to",
+        "selector": "body",
+        "dialog_node": "node_8_date_range_stats_response"
+      }
+    },
+    {
+      "type": "standard",
+      "title": "Date Range Stats Response",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "<? $webhook_result_5.response.text ?>"
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "parent": "node_8_date_range_stats",
+      "dialog_node": "node_8_date_range_stats_response",
+      "previous_sibling": "node_8_date_range_stats"
+    },
+    {
+      "type": "standard",
+      "title": "Thanks",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "You're welcome! Let me know if you need anything else."
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "conditions": "#thanks",
+      "dialog_node": "node_9_thanks"
+    },
+    {
+      "type": "standard",
+      "title": "Goodbye",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "Goodbye! Feel free to come back anytime you need performance insights."
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "conditions": "#goodbye",
+      "dialog_node": "node_10_goodbye"
+    },
+    {
+      "type": "standard",
+      "title": "Anything Else",
+      "output": {
+        "generic": [
+          {
+            "values": [
+              {
+                "text": "I didn't quite understand that. I can help you with:\n- Order statistics\n- Component performance\n- Visualizations\n- Component lists\n\nTry asking something like 'Show me max orders yesterday' or 'How is the work order component performing?'"
+              }
+            ],
+            "response_type": "text",
+            "selection_policy": "sequential"
+          }
+        ]
+      },
+      "conditions": "anything_else",
+      "dialog_node": "node_11_anything_else"
+    }
+  ]
+}

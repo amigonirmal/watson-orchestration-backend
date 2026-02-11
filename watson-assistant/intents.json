@@ -1,0 +1,178 @@
+{
+  "intents": [
+    {
+      "intent": "query_order_statistics",
+      "description": "Query for maximum or minimum number of orders in a date range",
+      "examples": [
+        "What is the maximum number of orders created yesterday?",
+        "Show me the max orders created last week",
+        "What was the minimum number of orders on January 15th?",
+        "How many orders were created at peak time last month?",
+        "What's the highest order count in the last 7 days?",
+        "Show me the lowest order volume for last week",
+        "What was the maximum hourly order count yesterday?",
+        "Give me the minimum daily orders for last month",
+        "What's the peak order creation time for today?",
+        "Show me order statistics for the date range January 1 to January 31",
+        "What were the max and min orders created between March 1 and March 15?",
+        "How many orders were created per hour yesterday?",
+        "Show me daily order counts for last week",
+        "What's the order volume trend for the past month?",
+        "Give me hourly breakdown of orders for February 5th"
+      ]
+    },
+    {
+      "intent": "query_component_performance",
+      "description": "Query performance metrics for specific components",
+      "examples": [
+        "How is the work order component performing?",
+        "Show me performance of the asset component for last week",
+        "What's the response time for the inventory component?",
+        "Give me performance metrics for the purchase order component",
+        "How fast is the work order component responding?",
+        "Show me the success rate of the asset component",
+        "What's the average response time for the service request component?",
+        "Give me performance data for the location component between Jan 1 and Jan 15",
+        "How many failed requests does the work order component have?",
+        "Show me error rate for the inventory component",
+        "What's the p95 response time for the asset component?",
+        "Give me performance comparison for work order and asset components",
+        "Show me the slowest component in the last 24 hours",
+        "What component has the highest error rate?",
+        "Give me performance trends for the purchase order component"
+      ]
+    },
+    {
+      "intent": "query_component_list",
+      "description": "List available components or search for specific components",
+      "examples": [
+        "What components are available?",
+        "List all components",
+        "Show me all available components",
+        "What components can I query?",
+        "Give me a list of components",
+        "What are the component names?",
+        "Show me components related to work orders",
+        "List components that contain 'asset'",
+        "What inventory components are available?",
+        "Show me all purchase order related components",
+        "Give me components starting with 'work'",
+        "List all service request components",
+        "What components are tracked in the system?",
+        "Show me the top 10 most queried components",
+        "Give me components with the most data"
+      ]
+    },
+    {
+      "intent": "generate_visualization",
+      "description": "Request graph or chart visualization of data",
+      "examples": [
+        "Show me a graph of order trends",
+        "Generate a chart for component performance",
+        "Create a visualization of response times",
+        "Show me a graph of work order performance over time",
+        "Generate a chart comparing component response times",
+        "Create a heatmap of hourly order volumes",
+        "Show me a line graph of daily orders for last month",
+        "Generate a bar chart of component success rates",
+        "Create a pie chart of error distribution",
+        "Show me a time series graph of response times",
+        "Generate a visualization of peak hours",
+        "Create a graph showing performance trends",
+        "Show me a chart of component comparison",
+        "Generate a visualization of order patterns",
+        "Create a graph of hourly performance metrics"
+      ]
+    },
+    {
+      "intent": "query_date_range_stats",
+      "description": "Get general statistics for a specific date range",
+      "examples": [
+        "Show me statistics for last week",
+        "What are the metrics for yesterday?",
+        "Give me stats for January 2026",
+        "Show me performance data for the last 30 days",
+        "What happened between January 1 and January 15?",
+        "Give me a summary of last month",
+        "Show me statistics for today",
+        "What are the numbers for the past 7 days?",
+        "Give me metrics for the date range Feb 1 to Feb 10",
+        "Show me overall performance for last quarter",
+        "What's the summary for this week?",
+        "Give me statistics for the past 24 hours",
+        "Show me data for the current month",
+        "What are the metrics for the last hour?",
+        "Give me a breakdown of yesterday's performance"
+      ]
+    },
+    {
+      "intent": "help",
+      "description": "User needs help or information about capabilities",
+      "examples": [
+        "What can you do?",
+        "Help me",
+        "What queries can I ask?",
+        "How do I use this?",
+        "What are your capabilities?",
+        "Show me examples",
+        "What kind of questions can I ask?",
+        "Help",
+        "I need assistance",
+        "What can I query?",
+        "Show me what you can do",
+        "Give me some examples",
+        "How does this work?",
+        "What information can you provide?",
+        "Guide me"
+      ]
+    },
+    {
+      "intent": "greeting",
+      "description": "User greets the assistant",
+      "examples": [
+        "Hello",
+        "Hi",
+        "Hey",
+        "Good morning",
+        "Good afternoon",
+        "Good evening",
+        "Hi there",
+        "Hello there",
+        "Hey there",
+        "Greetings"
+      ]
+    },
+    {
+      "intent": "goodbye",
+      "description": "User says goodbye",
+      "examples": [
+        "Goodbye",
+        "Bye",
+        "See you",
+        "See you later",
+        "Talk to you later",
+        "Bye bye",
+        "Catch you later",
+        "Until next time",
+        "Take care",
+        "Thanks, bye"
+      ]
+    },
+    {
+      "intent": "thanks",
+      "description": "User expresses gratitude",
+      "examples": [
+        "Thank you",
+        "Thanks",
+        "Thanks a lot",
+        "Thank you very much",
+        "I appreciate it",
+        "Thanks for your help",
+        "That's helpful",
+        "Perfect, thanks",
+        "Great, thank you",
+        "Awesome, thanks"
+      ]
+    }
+  ]
+}

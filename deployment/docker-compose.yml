@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (already running, but included for reference)
+  postgres:
+    image: postgres:13
+    container_name: watson-postgres
+    environment:
+      POSTGRES_DB: gatling_results
+      POSTGRES_USER: gatling
+      POSTGRES_PASSWORD: gatling123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gatling"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - watson-network
+
+  # Backend API Service
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: watson-backend
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: gatling_results
+      DB_USER: gatling
+      DB_PASSWORD: gatling123
+      API_KEY: ${API_KEY:-your-secure-api-key}
+      LOG_LEVEL: info
+      CORS_ORIGIN: "*"
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - backend_logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - watson-network
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: watson-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - watson-network
+
+  # Redis Cache (Optional - for caching)
+  redis:
+    image: redis:7-alpine
+    container_name: watson-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - watson-network
+
+volumes:
+  postgres_data:
+    driver: local
+  backend_logs:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  watson-network:
+    driver: bridge
+
+# Made with Bob

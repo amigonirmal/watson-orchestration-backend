@@ -1,0 +1,52 @@
+{
+  "name": "watson-orchestration-backend",
+  "version": "1.0.0",
+  "description": "Backend API service for Watson Orchestration Agent with PostgreSQL integration",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest --coverage",
+    "lint": "eslint src/**/*.js",
+    "migrate": "node src/database/migrate.js"
+  },
+  "keywords": [
+    "watson",
+    "orchestration",
+    "postgresql",
+    "api",
+    "chatbot"
+  ],
+  "author": "Bob",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "date-fns": "^3.0.6",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3",
+    "pg-pool": "^3.6.1",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.11.0"
+  },
+  "optionalDependencies": {
+    "chart.js": "^4.4.1",
+    "chartjs-node-canvas": "^4.1.6"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
