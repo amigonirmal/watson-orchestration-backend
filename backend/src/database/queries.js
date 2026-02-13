@@ -261,55 +261,50 @@ async function getComponentList(params) {
   const { searchTerm, limit } = params;
   
   try {
-    // Optimized single query using DISTINCT and window functions
+    // Optimized single query: First get distinct servers, then get their categories
     const query = `
-      WITH server_data AS (
+      WITH distinct_servers AS (
         SELECT DISTINCT
           server_name,
-          service_name,
-          service_type,
-          context_name,
-          statistic_name,
-          MAX(start_time_stamp) OVER (PARTITION BY server_name) as last_record_time,
-          COUNT(*) OVER (PARTITION BY server_name, service_name, service_type, context_name, statistic_name) as record_count,
-          SUM(statistic_value) OVER (PARTITION BY server_name, service_name, service_type, context_name, statistic_name) as total_value,
-          AVG(statistic_value) OVER (PARTITION BY server_name, service_name, service_type, context_name, statistic_name) as avg_value,
-          MAX(statistic_value) OVER (PARTITION BY server_name, service_name, service_type, context_name, statistic_name) as max_value,
-          MIN(statistic_value) OVER (PARTITION BY server_name, service_name, service_type, context_name, statistic_name) as min_value
+          MAX(start_time_stamp) as last_record_time
         FROM yfs_statistics_detail
         WHERE service_type IN ('AGENT', 'INTEGRATION')
           ${searchTerm ? 'AND server_name ILIKE $1' : ''}
+        GROUP BY server_name
+        ORDER BY server_name
+        LIMIT ${limit || 300}
       ),
-      ranked_servers AS (
+      category_stats AS (
         SELECT
-          server_name,
-          last_record_time,
-          ROW_NUMBER() OVER (PARTITION BY server_name ORDER BY server_name) as rn
-        FROM server_data
+          ysd.server_name,
+          ysd.service_name,
+          ysd.service_type,
+          ysd.context_name,
+          ysd.statistic_name,
+          COUNT(*) as record_count,
+          SUM(ysd.statistic_value) as total_value,
+          AVG(ysd.statistic_value) as avg_value,
+          MAX(ysd.statistic_value) as max_value,
+          MIN(ysd.statistic_value) as min_value
+        FROM yfs_statistics_detail ysd
+        INNER JOIN distinct_servers ds ON ysd.server_name = ds.server_name
+        GROUP BY ysd.server_name, ysd.service_name, ysd.service_type, ysd.context_name, ysd.statistic_name
       )
       SELECT
-        sd.server_name,
-        sd.last_record_time,
-        sd.service_name,
-        sd.service_type,
-        sd.context_name,
-        sd.statistic_name,
-        sd.record_count,
-        sd.total_value,
-        sd.avg_value,
-        sd.max_value,
-        sd.min_value
-      FROM server_data sd
-      INNER JOIN ranked_servers rs
-        ON sd.server_name = rs.server_name
-      WHERE rs.rn = 1
-        AND sd.server_name IN (
-          SELECT DISTINCT server_name
-          FROM ranked_servers
-          ORDER BY server_name
-          LIMIT ${limit || 300}
-        )
-      ORDER BY sd.server_name, sd.service_type, sd.service_name, sd.statistic_name
+        ds.server_name,
+        ds.last_record_time,
+        cs.service_name,
+        cs.service_type,
+        cs.context_name,
+        cs.statistic_name,
+        cs.record_count,
+        cs.total_value,
+        cs.avg_value,
+        cs.max_value,
+        cs.min_value
+      FROM distinct_servers ds
+      LEFT JOIN category_stats cs ON ds.server_name = cs.server_name
+      ORDER BY ds.server_name, cs.service_type, cs.service_name, cs.statistic_name
     `;
     
     const queryParams = searchTerm ? [`%${searchTerm}%`] : [];
