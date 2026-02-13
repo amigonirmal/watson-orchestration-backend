@@ -261,52 +261,89 @@ async function getComponentList(params) {
   const { searchTerm, limit } = params;
   
   try {
-    // First, get the list of servers (AGENT or INTEGRATION service_type)
-    const serversQuery = `
-      SELECT DISTINCT
-        server_name,
-        MAX(start_time_stamp) as last_record_time
-      FROM yfs_statistics_detail
-      WHERE service_type IN ('AGENT', 'INTEGRATION')
-        ${searchTerm ? 'AND server_name ILIKE $1' : ''}
-      GROUP BY server_name
-      ORDER BY server_name
-      LIMIT ${limit || 300}
+    // Optimized single query using DISTINCT and window functions
+    const query = `
+      WITH server_data AS (
+        SELECT DISTINCT
+          server_name,
+          service_name,
+          service_type,
+          context_name,
+          statistic_name,
+          MAX(start_time_stamp) OVER (PARTITION BY server_name) as last_record_time,
+          COUNT(*) OVER (PARTITION BY server_name, service_name, service_type, context_name, statistic_name) as record_count,
+          SUM(statistic_value) OVER (PARTITION BY server_name, service_name, service_type, context_name, statistic_name) as total_value,
+          AVG(statistic_value) OVER (PARTITION BY server_name, service_name, service_type, context_name, statistic_name) as avg_value,
+          MAX(statistic_value) OVER (PARTITION BY server_name, service_name, service_type, context_name, statistic_name) as max_value,
+          MIN(statistic_value) OVER (PARTITION BY server_name, service_name, service_type, context_name, statistic_name) as min_value
+        FROM yfs_statistics_detail
+        WHERE service_type IN ('AGENT', 'INTEGRATION')
+          ${searchTerm ? 'AND server_name ILIKE $1' : ''}
+      ),
+      ranked_servers AS (
+        SELECT
+          server_name,
+          last_record_time,
+          ROW_NUMBER() OVER (PARTITION BY server_name ORDER BY server_name) as rn
+        FROM server_data
+      )
+      SELECT
+        sd.server_name,
+        sd.last_record_time,
+        sd.service_name,
+        sd.service_type,
+        sd.context_name,
+        sd.statistic_name,
+        sd.record_count,
+        sd.total_value,
+        sd.avg_value,
+        sd.max_value,
+        sd.min_value
+      FROM server_data sd
+      INNER JOIN ranked_servers rs
+        ON sd.server_name = rs.server_name
+      WHERE rs.rn = 1
+        AND sd.server_name IN (
+          SELECT DISTINCT server_name
+          FROM ranked_servers
+          ORDER BY server_name
+          LIMIT ${limit || 300}
+        )
+      ORDER BY sd.server_name, sd.service_type, sd.service_name, sd.statistic_name
     `;
     
-    const serverParams = searchTerm ? [`%${searchTerm}%`] : [];
-    const serversResult = await db.query(serversQuery, serverParams);
+    const queryParams = searchTerm ? [`%${searchTerm}%`] : [];
+    const result = await db.query(query, queryParams);
     
-    // For each server, get its categories (service_name + service_type + context_name)
-    const serversWithCategories = await Promise.all(
-      serversResult.rows.map(async (server) => {
-        const categoriesQuery = `
-          SELECT
-            service_name,
-            service_type,
-            context_name,
-            statistic_name,
-            COUNT(*) as record_count,
-            SUM(statistic_value) as total_value,
-            AVG(statistic_value) as avg_value,
-            MAX(statistic_value) as max_value,
-            MIN(statistic_value) as min_value
-          FROM yfs_statistics_detail
-          WHERE server_name = $1
-          GROUP BY service_name, service_type, context_name, statistic_name
-          ORDER BY service_type, service_name, statistic_name
-        `;
-        
-        const categoriesResult = await db.query(categoriesQuery, [server.server_name]);
-        
-        return {
-          server_name: server.server_name,
-          last_record_time: server.last_record_time,
-          categories: categoriesResult.rows,
-          total_categories: categoriesResult.rowCount
-        };
-      })
-    );
+    // Group results by server
+    const serversMap = new Map();
+    
+    result.rows.forEach(row => {
+      if (!serversMap.has(row.server_name)) {
+        serversMap.set(row.server_name, {
+          server_name: row.server_name,
+          last_record_time: row.last_record_time,
+          categories: [],
+          total_categories: 0
+        });
+      }
+      
+      const server = serversMap.get(row.server_name);
+      server.categories.push({
+        service_name: row.service_name,
+        service_type: row.service_type,
+        context_name: row.context_name,
+        statistic_name: row.statistic_name,
+        record_count: parseInt(row.record_count),
+        total_value: parseFloat(row.total_value),
+        avg_value: parseFloat(row.avg_value),
+        max_value: parseFloat(row.max_value),
+        min_value: parseFloat(row.min_value)
+      });
+      server.total_categories = server.categories.length;
+    });
+    
+    const serversWithCategories = Array.from(serversMap.values());
     
     return {
       success: true,
@@ -315,6 +352,7 @@ async function getComponentList(params) {
         searchTerm,
         count: serversWithCategories.length,
         limit: limit || 300,
+        query_optimization: 'single_query_with_window_functions'
       },
     };
   } catch (error) {
