@@ -258,10 +258,40 @@ async function getTimeSeriesData(params) {
  * @returns {Promise<Object>} Component list with categories
  */
 async function getComponentList(params) {
-  const { searchTerm, limit } = params;
+  const { searchTerm, limit, includeServices = false } = params;
   
   try {
-    // Optimized query: Get distinct servers with their service combinations and statistic names as array
+    if (!includeServices) {
+      // Simple query: Just return distinct server names
+      const query = `
+        SELECT DISTINCT server_name
+        FROM yfs_statistics_detail
+        WHERE service_type IN ('AGENT', 'INTEGRATION')
+          ${searchTerm ? 'AND server_name ILIKE $1' : ''}
+        ORDER BY server_name
+        LIMIT ${limit || 300}
+      `;
+      
+      const queryParams = searchTerm ? [`%${searchTerm}%`] : [];
+      const result = await db.query(query, queryParams);
+      
+      const servers = result.rows.map(row => ({
+        server_name: row.server_name
+      }));
+      
+      return {
+        success: true,
+        data: servers,
+        metadata: {
+          searchTerm,
+          count: servers.length,
+          limit: limit || 300,
+          include_services: false
+        },
+      };
+    }
+    
+    // Full query: Get servers with their service combinations and statistic names
     const query = `
       WITH distinct_servers AS (
         SELECT DISTINCT server_name
@@ -315,7 +345,8 @@ async function getComponentList(params) {
         searchTerm,
         count: serversWithServices.length,
         limit: limit || 300,
-        total_services: result.rowCount
+        total_services: result.rowCount,
+        include_services: true
       },
     };
   } catch (error) {

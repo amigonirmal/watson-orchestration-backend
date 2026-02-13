@@ -55,9 +55,12 @@ router.get('/component/performance', validateQueryParams, async (req, res) => {
  */
 router.get('/components/list', async (req, res) => {
   try {
+    const includeServices = req.query.include_services === 'true' || req.query.include_services === 'Y';
+    
     const params = {
       searchTerm: req.query.search,
       limit: parseInt(req.query.limit || '300'),
+      includeServices: includeServices,
     };
     
     const result = await queries.getComponentList(params);

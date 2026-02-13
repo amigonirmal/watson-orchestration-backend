@@ -172,7 +172,7 @@
     "/api/query/components/list": {
       "get": {
         "summary": "List Components (Optimized & Simplified)",
-        "description": "Get a list of distinct servers with their unique service combinations. Returns only essential fields: server_name, service_name, service_type, context_name, and statistic_names (as array). **OPTIMIZED**: Single SQL query with ARRAY_AGG for grouping statistics.",
+        "description": "Get a list of distinct servers with optional service details. By default, returns only server names for performance. Set `include_services=true` or `include_services=Y` to include full service details. **OPTIMIZED**: Single SQL query with conditional service inclusion.",
         "tags": ["Query"],
         "security": [
           {
@@ -202,53 +202,94 @@
               "minimum": 1
             },
             "example": 10
+          },
+          {
+            "name": "include_services",
+            "in": "query",
+            "description": "Include service details in response. Accepts 'true', 'Y' to include services. Default is false (N) for better performance.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false", "Y", "N"],
+              "default": "false"
+            },
+            "example": "true"
           }
         ],
         "responses": {
           "200": {
-            "description": "Components list retrieved successfully. Returns distinct servers with their unique service combinations. Each service includes an array of available statistic names.",
+            "description": "Components list retrieved successfully. Response format depends on `include_services` parameter:\n- **Default (include_services=false/N)**: Returns only server names for optimal performance\n- **With services (include_services=true/Y)**: Returns servers with full service details including statistic names",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ComponentsListResponse"
                 },
-                "example": {
-                  "success": true,
-                  "data": [
-                    {
-                      "server_name": "YFSAPP01",
-                      "services": [
+                "examples": {
+                  "without_services": {
+                    "summary": "Default response (include_services=false or N)",
+                    "value": {
+                      "success": true,
+                      "data": [
                         {
-                          "service_name": "processOrder",
-                          "service_type": "INTEGRATION",
-                          "context_name": "YFSExtnOrderProcessOrderImplService",
-                          "statistic_names": ["Average", "Invocations", "Maximum", "Minimum"]
+                          "server_name": "YFSAPP01"
                         },
                         {
-                          "service_name": "getOrderDetails",
-                          "service_type": "INTEGRATION",
-                          "context_name": "YFSExtnOrderProcessOrderImplService",
-                          "statistic_names": ["Average", "Invocations", "Maximum"]
-                        }
-                      ]
-                    },
-                    {
-                      "server_name": "YFSAPP02",
-                      "services": [
+                          "server_name": "YFSAPP02"
+                        },
                         {
-                          "service_name": "updateInventory",
-                          "service_type": "INTEGRATION",
-                          "context_name": "YFSExtnInventoryManagementService",
-                          "statistic_names": ["Average", "Invocations"]
+                          "server_name": "YFSAPP03"
                         }
-                      ]
+                      ],
+                      "metadata": {
+                        "searchTerm": null,
+                        "count": 74,
+                        "limit": 300,
+                        "include_services": false
+                      }
                     }
-                  ],
-                  "metadata": {
-                    "searchTerm": null,
-                    "count": 74,
-                    "limit": 300,
-                    "total_services": 180
+                  },
+                  "with_services": {
+                    "summary": "Full response (include_services=true or Y)",
+                    "value": {
+                      "success": true,
+                      "data": [
+                        {
+                          "server_name": "YFSAPP01",
+                          "services": [
+                            {
+                              "service_name": "processOrder",
+                              "service_type": "INTEGRATION",
+                              "context_name": "YFSExtnOrderProcessOrderImplService",
+                              "statistic_names": ["Average", "Invocations", "Maximum", "Minimum"]
+                            },
+                            {
+                              "service_name": "getOrderDetails",
+                              "service_type": "INTEGRATION",
+                              "context_name": "YFSExtnOrderProcessOrderImplService",
+                              "statistic_names": ["Average", "Invocations", "Maximum"]
+                            }
+                          ]
+                        },
+                        {
+                          "server_name": "YFSAPP02",
+                          "services": [
+                            {
+                              "service_name": "updateInventory",
+                              "service_type": "INTEGRATION",
+                              "context_name": "YFSExtnInventoryManagementService",
+                              "statistic_names": ["Average", "Invocations"]
+                            }
+                          ]
+                        }
+                      ],
+                      "metadata": {
+                        "searchTerm": null,
+                        "count": 74,
+                        "limit": 300,
+                        "total_services": 180,
+                        "include_services": true
+                      }
+                    }
                   }
                 }
               }

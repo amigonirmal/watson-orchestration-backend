@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Watson Orchestrate Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script>
+    window.wxOConfiguration = {
+      orchestrationID: "20260210-0947-1614-5013-3b292e5837c5_20260210-0947-4499-1007-f9310dd0c993",
+      hostURL: "https://eu-central-1.dl.watson-orchestrate.ibm.com",
+      rootElementID: "root",
+      chatOptions: {
+        agentId: "1a041ed6-366b-4031-bd6c-7dd50b1c0418",
+        agentEnvironmentId: "0313ac04-c038-432f-a9cd-4ebcf37c5854"
+      }
+    };
+
+    setTimeout(function () {
+      const script = document.createElement('script');
+      script.src = `${window.wxOConfiguration.hostURL}/wxochat/wxoLoader.js?embed=true`;
+      script.addEventListener('load', function () {
+        wxoLoader.init();
+      });
+      document.head.appendChild(script);
+    }, 0);
+  </script>
+</head>
+
+<body>
+  <!-- Root element required by Watson Orchestrate -->
+  <div id="root"></div>
+</body>
+</html>
