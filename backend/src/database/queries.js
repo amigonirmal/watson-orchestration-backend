@@ -261,50 +261,26 @@ async function getComponentList(params) {
   const { searchTerm, limit } = params;
   
   try {
-    // Optimized single query: First get distinct servers, then get their categories
+    // Optimized query: Get distinct servers with their service combinations and statistic names as array
     const query = `
       WITH distinct_servers AS (
-        SELECT DISTINCT
-          server_name,
-          MAX(start_time_stamp) as last_record_time
+        SELECT DISTINCT server_name
         FROM yfs_statistics_detail
         WHERE service_type IN ('AGENT', 'INTEGRATION')
           ${searchTerm ? 'AND server_name ILIKE $1' : ''}
-        GROUP BY server_name
         ORDER BY server_name
         LIMIT ${limit || 300}
-      ),
-      category_stats AS (
-        SELECT
-          ysd.server_name,
-          ysd.service_name,
-          ysd.service_type,
-          ysd.context_name,
-          ysd.statistic_name,
-          COUNT(*) as record_count,
-          SUM(ysd.statistic_value) as total_value,
-          AVG(ysd.statistic_value) as avg_value,
-          MAX(ysd.statistic_value) as max_value,
-          MIN(ysd.statistic_value) as min_value
-        FROM yfs_statistics_detail ysd
-        INNER JOIN distinct_servers ds ON ysd.server_name = ds.server_name
-        GROUP BY ysd.server_name, ysd.service_name, ysd.service_type, ysd.context_name, ysd.statistic_name
       )
       SELECT
-        ds.server_name,
-        ds.last_record_time,
-        cs.service_name,
-        cs.service_type,
-        cs.context_name,
-        cs.statistic_name,
-        cs.record_count,
-        cs.total_value,
-        cs.avg_value,
-        cs.max_value,
-        cs.min_value
-      FROM distinct_servers ds
-      LEFT JOIN category_stats cs ON ds.server_name = cs.server_name
-      ORDER BY ds.server_name, cs.service_type, cs.service_name, cs.statistic_name
+        ysd.server_name,
+        ysd.service_name,
+        ysd.service_type,
+        ysd.context_name,
+        ARRAY_AGG(DISTINCT ysd.statistic_name ORDER BY ysd.statistic_name) as statistic_names
+      FROM yfs_statistics_detail ysd
+      INNER JOIN distinct_servers ds ON ysd.server_name = ds.server_name
+      GROUP BY ysd.server_name, ysd.service_name, ysd.service_type, ysd.context_name
+      ORDER BY ysd.server_name, ysd.service_type, ysd.service_name
     `;
     
     const queryParams = searchTerm ? [`%${searchTerm}%`] : [];
@@ -317,37 +293,29 @@ async function getComponentList(params) {
       if (!serversMap.has(row.server_name)) {
         serversMap.set(row.server_name, {
           server_name: row.server_name,
-          last_record_time: row.last_record_time,
-          categories: [],
-          total_categories: 0
+          services: []
         });
       }
       
       const server = serversMap.get(row.server_name);
-      server.categories.push({
+      server.services.push({
         service_name: row.service_name,
         service_type: row.service_type,
         context_name: row.context_name,
-        statistic_name: row.statistic_name,
-        record_count: parseInt(row.record_count),
-        total_value: parseFloat(row.total_value),
-        avg_value: parseFloat(row.avg_value),
-        max_value: parseFloat(row.max_value),
-        min_value: parseFloat(row.min_value)
+        statistic_names: row.statistic_names
       });
-      server.total_categories = server.categories.length;
     });
     
-    const serversWithCategories = Array.from(serversMap.values());
+    const serversWithServices = Array.from(serversMap.values());
     
     return {
       success: true,
-      data: serversWithCategories,
+      data: serversWithServices,
       metadata: {
         searchTerm,
-        count: serversWithCategories.length,
+        count: serversWithServices.length,
         limit: limit || 300,
-        query_optimization: 'single_query_with_window_functions'
+        total_services: result.rowCount
       },
     };
   } catch (error) {

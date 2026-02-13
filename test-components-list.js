@@ -31,17 +31,15 @@ async function testComponentsList() {
     if (response1.data.data.length > 0) {
       const firstServer = response1.data.data[0];
       console.log(`\n📦 Sample Server: ${firstServer.server_name}`);
-      console.log(`   Categories: ${firstServer.total_categories}`);
-      console.log(`   Last Record: ${firstServer.last_record_time}`);
+      console.log(`   Total Services: ${firstServer.services.length}`);
       
-      if (firstServer.categories.length > 0) {
-        console.log(`\n   Sample Category:`);
-        const cat = firstServer.categories[0];
-        console.log(`   - Service: ${cat.service_name}`);
-        console.log(`   - Type: ${cat.service_type}`);
-        console.log(`   - Statistic: ${cat.statistic_name}`);
-        console.log(`   - Records: ${cat.record_count}`);
-        console.log(`   - Avg Value: ${cat.avg_value}`);
+      if (firstServer.services.length > 0) {
+        console.log(`\n   Sample Service:`);
+        const svc = firstServer.services[0];
+        console.log(`   - Service Name: ${svc.service_name}`);
+        console.log(`   - Service Type: ${svc.service_type}`);
+        console.log(`   - Context: ${svc.context_name}`);
+        console.log(`   - Statistics: [${svc.statistic_names.join(', ')}]`);
       }
     }
     
@@ -60,8 +58,15 @@ async function testComponentsList() {
     if (response2.data.data.length > 0) {
       const server = response2.data.data[0];
       console.log(`\n📦 Server: ${server.server_name}`);
-      console.log(`   Total Categories: ${server.total_categories}`);
-      console.log(`   Last Record: ${server.last_record_time}`);
+      console.log(`   Total Services: ${server.services.length}`);
+      
+      if (server.services.length > 0) {
+        console.log(`\n   First 3 Services:`);
+        server.services.slice(0, 3).forEach((svc, idx) => {
+          console.log(`   ${idx + 1}. ${svc.service_name} (${svc.service_type})`);
+          console.log(`      Statistics: [${svc.statistic_names.join(', ')}]`);
+        });
+      }
     }
     
     // Test 3: Limited results
@@ -78,7 +83,7 @@ async function testComponentsList() {
     
     console.log('\n   Servers:');
     response3.data.data.forEach((server, index) => {
-      console.log(`   ${index + 1}. ${server.server_name} (${server.total_categories} categories)`);
+      console.log(`   ${index + 1}. ${server.server_name} (${server.services.length} services)`);
     });
     
     // Test 4: Partial search
@@ -108,22 +113,16 @@ async function testComponentsList() {
     const sample = response1.data.data[0];
     console.log('Required fields present:');
     console.log(`  ✓ server_name: ${!!sample.server_name}`);
-    console.log(`  ✓ last_record_time: ${!!sample.last_record_time}`);
-    console.log(`  ✓ categories: ${Array.isArray(sample.categories)}`);
-    console.log(`  ✓ total_categories: ${typeof sample.total_categories === 'number'}`);
+    console.log(`  ✓ services: ${Array.isArray(sample.services)}`);
     
-    if (sample.categories.length > 0) {
-      const cat = sample.categories[0];
-      console.log('\nCategory fields present:');
-      console.log(`  ✓ service_name: ${!!cat.service_name}`);
-      console.log(`  ✓ service_type: ${!!cat.service_type}`);
-      console.log(`  ✓ context_name: ${!!cat.context_name}`);
-      console.log(`  ✓ statistic_name: ${!!cat.statistic_name}`);
-      console.log(`  ✓ record_count: ${typeof cat.record_count === 'number'}`);
-      console.log(`  ✓ total_value: ${typeof cat.total_value === 'number'}`);
-      console.log(`  ✓ avg_value: ${typeof cat.avg_value === 'number'}`);
-      console.log(`  ✓ max_value: ${typeof cat.max_value === 'number'}`);
-      console.log(`  ✓ min_value: ${typeof cat.min_value === 'number'}`);
+    if (sample.services.length > 0) {
+      const svc = sample.services[0];
+      console.log('\nService fields present:');
+      console.log(`  ✓ service_name: ${!!svc.service_name}`);
+      console.log(`  ✓ service_type: ${!!svc.service_type}`);
+      console.log(`  ✓ context_name: ${!!svc.context_name}`);
+      console.log(`  ✓ statistic_names: ${Array.isArray(svc.statistic_names)}`);
+      console.log(`  ✓ statistic_names count: ${svc.statistic_names.length}`);
     }
     
     console.log('\n\n🎉 All tests completed successfully!');
